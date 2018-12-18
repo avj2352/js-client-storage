@@ -60,7 +60,7 @@ Indexed DB is literally a full database available on the client side.
 
 ---
 
-## Setting up Indexed DB connection
+## Setting up Indexed DB connection & Add Items
 
 ```js
 let db; //setting up indexed DB
@@ -84,14 +84,70 @@ window.onload = ()=>{
     request.onupgradeneeded = (e)=>{
         db = e.target.result; // Passing the database reference once again
 
-        // Create a objectStore with Primary key as Id
+        // Create a objectStore / table with Primary key as Id
         let objectStore = db.createObjectStore('contacts', {keyPath: 'id', autoIncrement: true});
-        // Create a table / schema
-        objectStore.createIndex('firstName','firstName',{unique:false});
-        objectStore.createIndex('lastName','lastName',{unique:false});
+
+        // Create a schema / column definition for the table
+        objectStore.createIndex('firstName','firstName',{unique:false}); // column #1
+        objectStore.createIndex('lastName','lastName',{unique:false}); //column #2
+
+        // Create a model first
+        let newItem = {firstName: 'Pramod', lastName: 'Jingade'};
+
+        // Create a transaction
+        let transaction = db.transaction(['contacts'], 'readwrite');
+
+        // Create a objectstore
+        objectStore = transaction.objectStore('contacts');
+
+        // Create a request - Add Item
+        let request = objectStore.add(newItem);
+
+        // Checking if add item as was successful
+        request.onsuccess = ()=>{
+            console.log('DB was added successfully');
+            newItem = {firstName: '', lastName: ''};
+        }
+
+        // Closing the transaction
+        transaction.oncomplete = () => {
+            console.log('Transaction completed on the database');
+        }
+
+        transaction.onerror = () => {
+            console.log('Error while performing transaction');
+        }
 
         console.log('Database created successfully');
     };
 
 };
 ```
+## Retrieving Added Items
+
+```js
+
+function displayData() {
+    // Get the reference to the indexedDB 
+let objectStore = db.transaction('contacts').objectStore('contacts');
+
+// to Read from the DB we need a cursor / pointer / iterator
+objectStore.openCursor().onsuccess = (e)=>{
+    let cursor = e.target.result;
+
+    if(cursor) {
+        console.log('PK of the record is: ', cursor.value.id);
+        console.log('First name is: ', cursor.value.firstName);
+        console.log('Last name is: ', cursor.value.lastName);
+        cursor.continue(); // Iterates through the next record
+    } else {
+        console.log('Sorry, DB is empty!');
+    }
+}
+}
+```
+
+Now `displayData()`  function can be called in two places
+
+- `request.onsuccess()` - Whenever the connection to the DB is successful OR
+- `transaction.oncomplete()` - Whenever we add new record to the DB
