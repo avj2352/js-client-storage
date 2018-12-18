@@ -151,3 +151,30 @@ Now `displayData()`  function can be called in two places
 
 - `request.onsuccess()` - Whenever the connection to the DB is successful OR
 - `transaction.oncomplete()` - Whenever we add new record to the DB
+
+### Deleting a Record
+
+Just like adding a record, Deleting the record follows the same syntax
+
+```js
+// Create a transaction
+        let rowId = 1;
+        let transaction = db.transaction(['contacts'], 'readwrite');
+
+        // Create a objectstore
+        objectStore = transaction.objectStore('contacts');
+
+        // Create a request - Delete Item based on its key 
+        let request = objectStore.delete(rowId); // rowId is the PK which is a number
+
+        // Checking if add item as was successful
+        request.onsuccess = ()=>{
+            console.log('Record was deleted successfully');
+            newItem = {firstName: '', lastName: ''};
+        }
+
+        // Closing the transaction
+        transaction.oncomplete = () => {
+            console.log('Transaction completed on the database');
+        }
+```
